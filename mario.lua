@@ -6,7 +6,7 @@ marioHeight = 32
 
 -- Tile positions
 local tiles_start_addr = 0x0500
-local tiles_final_addr = 0x069F
+local tiles_final_addr = 0x05cf
 local tiles_count = tiles_final_addr - tiles_start_addr + 1
 
 function tile2px(tilenum, screenpos)
@@ -14,9 +14,14 @@ function tile2px(tilenum, screenpos)
     return false;
   end;
 
-  px = tilenum * 0x10 - screenpos
+  page_size = 208
+  page = math.floor(tilenum / page_size)
+  page_x = math.fmod(tilenum, page_size) 
+  tile_x = math.fmod(page_x, 0x10) * 0x10 + page * 0x100 - screenpos
+  py = math.floor(math.fmod(tilenum, page_size) / 0x10) * 0x10 + 20
+  -- print(tilenum, screenpos, px)
 
-  returnval = {x = px, y = 0x20};
+  returnval = {x = tile_x, y = py};
   return returnval;
 end;
 
@@ -61,14 +66,15 @@ function everyframe()
       tile_addr = tiles_start_addr + i - 1
       tile = memory.readbyte(tile_addr)
       if tile ~= 0 then
-        tile_px = tile2px(tile_num, screenOffset)
+        tile_px = tile2px(tile_num - 1, screenOffset)
+        -- print(tile_num, tile_addr, tile, tile_px)
         if tile_px['x'] >= 0 and tile_px['y'] >= 0 then
-          gui.drawbox(tile_px['x'], tile_px['y'], tile_px['x'] + 16, tile_px['y'] + 16, "clear", "black")
+          gui.drawbox(tile_px['x'], tile_px['y'], tile_px['x'] + 16, tile_px['y'] + 16, "clear", "white")
         end
       end
-      if i < 10 then
-        print(tile_num, tile_addr, tile, tile_px)
-      end
+      -- if i < 10 then
+      --   
+      -- end
     end
 end
 
