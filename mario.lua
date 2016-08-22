@@ -14,14 +14,9 @@ function tile2px(tilenum, screenpos)
     return false;
   end;
 
-  px      = math.fmod(tilenum, 0xD0) * 0x10
+  px = tilenum * 0x10 - screenpos
 
-  if px < 0 then
-    px    = px + 0x200;
-  end;
-
-  py      = math.floor(tilenum / 0xD) * 0x10;
-  returnval = {x = px, y = py};
+  returnval = {x = px, y = 0x20};
   return returnval;
 end;
 
@@ -64,12 +59,15 @@ function everyframe()
     for i = 1, tiles_count do
       tile_num = i
       tile_addr = tiles_start_addr + i - 1
-      tile = memory.readbyte(tile_num)
+      tile = memory.readbyte(tile_addr)
       if tile ~= 0 then
         tile_px = tile2px(tile_num, screenOffset)
         if tile_px['x'] >= 0 and tile_px['y'] >= 0 then
           gui.drawbox(tile_px['x'], tile_px['y'], tile_px['x'] + 16, tile_px['y'] + 16, "clear", "black")
         end
+      end
+      if i < 10 then
+        print(tile_num, tile_addr, tile, tile_px)
       end
     end
 end
