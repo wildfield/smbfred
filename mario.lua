@@ -14,14 +14,13 @@ function tile2px(tilenum, screenpos)
     return false;
   end;
 
-  px      = (math.fmod(tilenum, 0x10) + math.floor(tilenum / 0xD0) * 0x10) * 0x10;
-  px      = px - math.fmod(screenpos, 0x200);
---  text(8,  8, string.format("PX[%4d] OF[%4X]", px, offset));
+  px      = math.fmod(tilenum, 0xD0) * 0x10
+
   if px < 0 then
     px    = px + 0x200;
   end;
 
-  py      = math.floor(math.fmod(tilenum, 0xD0) / 0x10);
+  py      = math.floor(tilenum / 0xD) * 0x10;
   returnval = {x = px, y = py};
   return returnval;
 end;
@@ -56,7 +55,7 @@ function everyframe()
    		enemyX = enemyTrueX - screenOffset
        	enemyY = memory.readbyte(0x0CF + i)
        	
-       	gui.text(5, i * 10 + 50, string.format("%02f %02f hor:%02f",enemyX,enemyY,enemyAbsMultX))
+       	--gui.text(5, i * 10 + 50, string.format("%02f %02f hor:%02f",enemyX,enemyY,enemyAbsMultX))
        	if enemyActive ~= 0 and enemyX > 0 and enemyX < 256 then
        		gui.drawbox(enemyX, enemyY + 8, enemyX + 16, enemyY + 24, "clear", "red")
        	end
@@ -67,8 +66,11 @@ function everyframe()
       tile_addr = tiles_start_addr + i - 1
       tile = memory.readbyte(tile_num)
       if tile ~= 0 then
-        tile_px = tile2px(tile, screenOffset)
-        gui.drawbox(tile_px['x'], tile_px['y'], tile_px['x'] + 16, tile_px['y'] + 16, "clear", "black")
+        tile_px = tile2px(tile_num, screenOffset)
+        if tile_px['x'] >= 0 and tile_px['y'] >= 0 then
+          gui.drawbox(tile_px['x'], tile_px['y'], tile_px['x'] + 16, tile_px['y'] + 16, "clear", "black")
+        end
+      end
     end
 end
 
