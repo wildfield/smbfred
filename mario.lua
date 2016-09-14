@@ -131,18 +131,20 @@ function everyframe()
 
     block_px_check = {x = mario_pixel_x_snapped + 16, y = mario_pixel_y_snapped}
     pit_px_check = {x = mario_pixel_x_snapped + 16, y = mario_pixel_y_snapped + 16}
+    floor_px_check = {x = mario_pixel_x_snapped, y = mario_pixel_y_snapped + 16}
+    at_floor = tiles_map_px[floor_px_check['y']][floor_px_check['x']] ~= 0
 
     block_check = false
 
-    if tiles_map_px[block_px_check['y']][block_px_check['x']] ~= 0 and jump_frames_timer == 0 then
-    	jump_frames_timer = 22
+    if tiles_map_px[block_px_check['y']][block_px_check['x']] ~= 0 and at_floor then
+    	jump_frames_timer = 25
     	block_check = true
     end
 
     pit_check = false
 
-    if tiles_map_px[pit_px_check['y']][pit_px_check['x']] == 0 and jump_frames_timer == 0 then
-    	jump_frames_timer = 22
+    if tiles_map_px[224][pit_px_check['x']] == 0 and at_floor then
+    	jump_frames_timer = 25
     	pit_check = true
     end
 
