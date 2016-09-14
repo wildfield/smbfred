@@ -53,7 +53,7 @@ function everyframe()
 	last_mario_pos_x = mario_x
 
 	speed_x = diff_x / elapsed_time -- Pixels/second
-	measured_frames = 20
+	measured_frames = 10
 
 	if #speed < measured_frames then
 		speed[#speed + 1] = speed_x
@@ -72,11 +72,17 @@ function everyframe()
 	end
 	speed_average = speed_average / #speed
 
+	-- Predictions
+
+	screenOffsetRel = memory.readbyte(0x071C)
+    screenOffsetMult = memory.readbyte(0x071A)
+    screenOffset = screenOffsetRel + screenOffsetMult * 256
+
+    mario_pixel_x = mario_x - screenOffset
+
        marioX = memory.readbyte(0x3AD)
        marioTrueX = memory.readbyte(0x0086)
-       screenOffsetRel = memory.readbyte(0x071C)
-       screenOffsetMult = memory.readbyte(0x071A)
-       screenOffset = screenOffsetRel + screenOffsetMult * 256
+
 
        marioY = memory.readbyte(0xCE)
        marioState = memory.readbyte(0x0756)
@@ -91,6 +97,9 @@ function everyframe()
        gui.text(5, 20, string.format("Total X: %02f", mario_x))
        gui.text(5, 30, string.format("Elapsed: %02f", elapsed_time))
        gui.text(5, 40, string.format("Speed: %02f", speed_average))
+
+       gui.text(5, 50, string.format("Memory pX: %02f", marioX))
+       gui.text(5, 60, string.format("Calculated pX: %02f", mario_pixel_x))
 
        for i = 0, 4 do
        	enemyActive = memory.readbyte(0x000F + i)
