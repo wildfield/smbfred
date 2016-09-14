@@ -36,6 +36,9 @@ function tile2px(tilenum, screenpos, current_page)
 end;
 
 function everyframe()
+	-- Enable invincibility
+	memory.writebyte(0x79F, 10)
+
        marioX = memory.readbyte(0x3AD)
        marioTrueX = memory.readbyte(0x0086)
        screenOffsetRel = memory.readbyte(0x071C)
@@ -52,8 +55,9 @@ function everyframe()
 
        gui.text(5, 10, string.format("offset: %02f", screenOffset))
 
-       gui.text(5, 30, string.format("X: %02f", memory.readbyte(0x0086)))
-       gui.text(5, 40, string.format("2nd X: %02f", memory.readbyte(0x006D)))
+       playerX = memory.readbyte(0x0086) + memory.readbyte(0x006D) * 256
+
+       gui.text(5, 20, string.format("Total X: %02f", playerX))
        
 
        for i = 0, 4 do
