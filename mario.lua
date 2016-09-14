@@ -35,9 +35,42 @@ function tile2px(tilenum, screenpos, current_page)
   return returnval;
 end;
 
+n_clock = 0
+last_mario_pos_x = 0
+speed = {}
+
 function everyframe()
 	-- Enable invincibility
 	memory.writebyte(0x79F, 10)
+
+	-- Measure time
+	elapsed_time = os.clock() - n_clock
+	n_clock = os.clock()
+
+	-- Measure speed
+	mario_x = memory.readbyte(0x0086) + memory.readbyte(0x006D) * 256
+	diff_x = math.abs(last_mario_pos_x - mario_x)
+	last_mario_pos_x = mario_x
+
+	speed_x = diff_x / elapsed_time -- Pixels/second
+	measured_frames = 20
+
+	if #speed < measured_frames then
+		speed[#speed + 1] = speed_x
+	else
+		new_speed = {}
+		for i = 1, measured_frames - 1 do
+			new_speed[i] = speed[i + 1]
+		end
+		new_speed[measured_frames] = speed_x
+		speed = new_speed
+	end
+
+	speed_average = 0
+	for i = 1, #speed do
+		speed_average = speed_average + speed[i]
+	end
+	speed_average = speed_average / #speed
 
        marioX = memory.readbyte(0x3AD)
        marioTrueX = memory.readbyte(0x0086)
@@ -55,10 +88,9 @@ function everyframe()
 
        gui.text(5, 10, string.format("offset: %02f", screenOffset))
 
-       playerX = memory.readbyte(0x0086) + memory.readbyte(0x006D) * 256
-
-       gui.text(5, 20, string.format("Total X: %02f", playerX))
-       
+       gui.text(5, 20, string.format("Total X: %02f", mario_x))
+       gui.text(5, 30, string.format("Elapsed: %02f", elapsed_time))
+       gui.text(5, 40, string.format("Speed: %02f", speed_average))
 
        for i = 0, 4 do
        	enemyActive = memory.readbyte(0x000F + i)
