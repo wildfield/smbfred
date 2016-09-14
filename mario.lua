@@ -38,6 +38,7 @@ end;
 n_clock = 0
 last_mario_pos_x = 0
 speed = {}
+jump_frames_timer = 0
 
 function everyframe()
 	-- Enable invincibility
@@ -79,12 +80,87 @@ function everyframe()
     screenOffset = screenOffsetRel + screenOffsetMult * 256
 
     mario_pixel_x = mario_x - screenOffset
+    marioY = memory.readbyte(0xCE)
+
+    -- Tiles
+
+    tiles_map = {}
+
+    tiles_map_px = {}
+    for i=1,256 do
+      tiles_map_px[i] = {}
+      for j=1,256 do
+        tiles_map_px[i][j] = 0
+      end
+    end
+
+    tile_map_num = 0
+
+    for i = 1, tiles_count do
+      tile_num = i
+      tile_addr = tiles_start_addr + i - 1
+      tile = memory.readbyte(tile_addr)
+      if tile ~= 0 then
+        tile_px = tile2px(tile_num - 1, screenOffset, screenOffsetMult)
+        -- print(tile_num, tile_addr, tile, tile_px)
+        if tile_px['x'] >= 0 and tile_px['y'] >= 0 then
+        	tiles_map[tile_map_num] = tile_px
+        	tile_map_num = tile_map_num + 1
+
+        	tiles_map_px[tile_px['y']][tile_px['x']] = 1
+        end
+      end
+      -- if i < 10 then
+      --   
+      -- end
+    end
+
+    for i, tile in pairs(tiles_map) do
+    	gui.text(tile['x'], tile['y'], string.format("%i %i", tile['x'], tile['y']))
+    	-- gui.drawbox(tile['x'], tile['y'], tile['x'] + 16, tile['y'] + 16, "clear", "white")
+    end
+
+    -- Inputs
+
+    inputs = {}
+    inputs['right']= true
+    inputs['B'] = true
+
+    mario_pixel_x_snapped = mario_pixel_x - mario_x % 16
+    mario_pixel_y_snapped = marioY - marioY % 16 + 16
+
+    block_px_check = {x = mario_pixel_x_snapped + 16, y = mario_pixel_y_snapped}
+    pit_px_check = {x = mario_pixel_x_snapped + 16, y = mario_pixel_y_snapped + 16}
+
+    block_check = false
+
+    if tiles_map_px[block_px_check['y']][block_px_check['x']] ~= 0 and jump_frames_timer == 0 then
+    	jump_frames_timer = 22
+    	block_check = true
+    end
+
+    pit_check = false
+
+    if tiles_map_px[pit_px_check['y']][pit_px_check['x']] == 0 and jump_frames_timer == 0 then
+    	jump_frames_timer = 22
+    	pit_check = true
+    end
+
+    if jump_frames_timer > 3 then
+    	inputs['A'] = true
+    end
+
+    if jump_frames_timer > 0 then
+    	jump_frames_timer = jump_frames_timer - 1
+    end
+
+    joypad.set(1, inputs)
+
+    -- Visual debug
 
        marioX = memory.readbyte(0x3AD)
        marioTrueX = memory.readbyte(0x0086)
-
-
-       marioY = memory.readbyte(0xCE)
+       
        marioState = memory.readbyte(0x0756)
        if marioState == 0 then
        	gui.drawbox(marioX, marioY + marioHeight / 2, marioX + marioWidth, marioY + marioHeight, "clear", "green")
@@ -98,8 +174,11 @@ function everyframe()
        gui.text(5, 30, string.format("Elapsed: %02f", elapsed_time))
        gui.text(5, 40, string.format("Speed: %02f", speed_average))
 
-       gui.text(5, 50, string.format("Memory pX: %02f", marioX))
-       gui.text(5, 60, string.format("Calculated pX: %02f", mario_pixel_x))
+       gui.text(5, 50, string.format("Mario X snapped: %02f", mario_pixel_x_snapped))
+       gui.text(5, 60, string.format("Mario Y snapped: %02f", mario_pixel_y_snapped))
+       gui.text(5, 70, string.format("Block check: %s", tostring(block_check)))
+       gui.text(5, 80, string.format("Pit check: %s", tostring(pit_check)))
+       gui.text(5, 90, string.format("Tile X Y: %02f %02f", tiles_map[1]['x'], tiles_map[1]['y']))
 
        for i = 0, 4 do
        	enemyActive = memory.readbyte(0x000F + i)
@@ -117,22 +196,6 @@ function everyframe()
        end
 
     current_page = screenOffsetMult
-
-    for i = 1, tiles_count do
-      tile_num = i
-      tile_addr = tiles_start_addr + i - 1
-      tile = memory.readbyte(tile_addr)
-      if tile ~= 0 then
-        tile_px = tile2px(tile_num - 1, screenOffset, screenOffsetMult)
-        -- print(tile_num, tile_addr, tile, tile_px)
-        if tile_px['x'] >= 0 and tile_px['y'] >= 0 then
-          gui.drawbox(tile_px['x'], tile_px['y'], tile_px['x'] + 16, tile_px['y'] + 16, "clear", "white")
-        end
-      end
-      -- if i < 10 then
-      --   
-      -- end
-    end
 end
 
 emu.registerafter(everyframe)
